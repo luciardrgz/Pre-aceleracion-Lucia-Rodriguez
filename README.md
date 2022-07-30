@@ -25,6 +25,6 @@
 - Lombok
 
 <br>
-📃 I tried to implement the documentation with Swagger, but it was not possible so far, so it is currently uploaded to <a href="https://documenter.getpostman.com/view/21715276/Uzdv27p3">Postman</a>.
+📃 I tried to implement the documentation with Swagger, but it wasn't possible so far, so it's currently uploaded to <a href="https://documenter.getpostman.com/view/21715276/Uzdv27p3">Postman</a>.
 
 
