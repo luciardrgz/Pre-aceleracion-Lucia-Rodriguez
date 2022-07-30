@@ -1,10 +1,7 @@
 package com.alkemy.disney.disney.exceptions.handler;
 
 import com.alkemy.disney.disney.dto.APIErrorDTO;
-import com.alkemy.disney.disney.exceptions.EmailExc;
-import com.alkemy.disney.disney.exceptions.ExistentUserExc;
-import com.alkemy.disney.disney.exceptions.NonExistentUserExc;
-import com.alkemy.disney.disney.exceptions.ParamNotFoundExc;
+import com.alkemy.disney.disney.exceptions.*;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -42,12 +39,18 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
                 new APIErrorDTO<>(HttpStatus.BAD_REQUEST, e.getMessage()), HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(NonExistentUserExc.class) // Not registered user trying to log in
+    @ExceptionHandler(NonExistentEmailOrPassExc.class) // User trying to log in with unregistered email / Wrong password
     protected ResponseEntity<APIErrorDTO<String>> handleNonExistentUser(ExistentUserExc e) {
         return new ResponseEntity<>(
                 new APIErrorDTO<>(HttpStatus.NOT_FOUND, e.getMessage()), HttpStatus.NOT_FOUND);
     }
 
+
+    @ExceptionHandler(DuplicateExc.class) // User trying to input duplicated information
+    protected ResponseEntity<APIErrorDTO<String>> handleDuplicateExc(DuplicateExc e) {
+        return new ResponseEntity<>(
+                new APIErrorDTO<>(HttpStatus.FORBIDDEN, e.getMessage()), HttpStatus.FORBIDDEN);
+    }
 
     @Override // Method argument not valid
     protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,

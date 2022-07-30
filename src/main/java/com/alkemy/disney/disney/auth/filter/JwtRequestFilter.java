@@ -14,12 +14,17 @@ import java.io.IOException;
 
 public class JwtRequestFilter extends OncePerRequestFilter
 {
+
     // Authenticates the passed Auth object, returns a fully populated Auth object if successful
     private AuthenticationManager authenticationManager;
 
     public JwtRequestFilter(AuthenticationManager authenticationManager) {
         this.authenticationManager = authenticationManager;
     }
+
+    public JwtRequestFilter(){
+    }
+
 
     @Override // Jwt Filter for Requests and Token Authentication
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {

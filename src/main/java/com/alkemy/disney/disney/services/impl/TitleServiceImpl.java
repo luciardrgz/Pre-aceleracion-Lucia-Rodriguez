@@ -4,19 +4,23 @@ import com.alkemy.disney.disney.dto.title.TitleDTO;
 import com.alkemy.disney.disney.dto.title.TitleFiltersDTO;
 import com.alkemy.disney.disney.entities.CharacterEntity;
 import com.alkemy.disney.disney.entities.TitleEntity;
+import com.alkemy.disney.disney.exceptions.DuplicateExc;
 import com.alkemy.disney.disney.exceptions.ParamNotFoundExc;
 import com.alkemy.disney.disney.mappers.TitleMapper;
-import com.alkemy.disney.disney.repositories.CharacterRepository;
 import com.alkemy.disney.disney.repositories.TitleRepository;
 import com.alkemy.disney.disney.repositories.specifications.TitleSpecification;
 import com.alkemy.disney.disney.services.CharacterService;
 import com.alkemy.disney.disney.services.TitleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+
+import static org.springframework.data.domain.ExampleMatcher.GenericPropertyMatchers.ignoreCase;
 
 @Service
 public class TitleServiceImpl implements TitleService {
@@ -24,7 +28,6 @@ public class TitleServiceImpl implements TitleService {
     private final TitleMapper titleMapper;
     private final TitleRepository titleRepository;
     private final CharacterService characterService;
-    private final CharacterRepository characterRepository;
     private final TitleSpecification titleSpecification;
 
     @Lazy
@@ -32,21 +35,35 @@ public class TitleServiceImpl implements TitleService {
     public TitleServiceImpl(TitleMapper titleMapper,
                             TitleRepository titleRepository,
                             CharacterService characterService,
-                            CharacterRepository characterRepository,
-    TitleSpecification titleSpecification){
+                            TitleSpecification titleSpecification){
         this.titleMapper = titleMapper;
         this.titleRepository = titleRepository;
         this.characterService = characterService;
-        this.characterRepository = characterRepository;
         this.titleSpecification = titleSpecification;
     }
 
     // Saves a title in Titles Repository
-    public TitleDTO save(TitleDTO dto)
-    {
-        TitleEntity entity = titleMapper.titleDTO2Entity(dto);
-        TitleEntity savedEntity = titleRepository.save(entity);
-        TitleDTO result = titleMapper.titleEntity2DTO(savedEntity, true);
+    public TitleDTO saveInRepo(TitleDTO dto) throws DuplicateExc {
+
+        TitleEntity savedEntity = null;
+
+        ExampleMatcher nameMatcher = ExampleMatcher.matching().withIgnorePaths("id")
+                .withMatcher("name", ignoreCase());
+
+        TitleEntity entity = this.titleMapper.titleDTO2Entity(dto);
+        Example<TitleEntity> ex = Example.of(entity, nameMatcher);
+        boolean exists = titleRepository.exists(ex);
+
+        if(exists == false)
+        {
+            savedEntity = this.titleRepository.save(entity);
+        }
+        else {
+            throw new DuplicateExc("Duplicate");
+        }
+
+        TitleDTO result = this.titleMapper.titleEntity2DTO(savedEntity,true);
+
         return result;
     }
 
@@ -106,14 +123,24 @@ public class TitleServiceImpl implements TitleService {
     }
 
     // Adds a Character to a list of Characters in a Title
-    public void addCharacterToTitle(Long titleId, Long characterId)
+    public void addCharacterToTitle(Long titleId, Long characterId) throws DuplicateExc
     {
         TitleEntity titleEntity = this.getTitleById(titleId);
-
         CharacterEntity characterEntity = characterService.getCharacterById(characterId);
-        titleEntity.addCharacter(characterEntity);
+
+        // Verifies that it isn't in this Title's characters list already
+        List<CharacterEntity>charactersInThisTitle = titleEntity.getCharacters();
+
+        if(!charactersInThisTitle.contains(characterEntity)){
+            titleEntity.addCharacter(characterEntity);
+        }
+        else{
+            throw new DuplicateExc("Duplicated");
+        }
         titleRepository.save(titleEntity);
     }
+
+
 
     // Removes a Character from a list of Characters in a Title
     public void removeCharacterFromTitle(Long titleId, Long characterId)

@@ -3,14 +3,15 @@ package com.alkemy.disney.disney.services;
 
 import com.alkemy.disney.disney.dto.character.CharacterDTO;
 import com.alkemy.disney.disney.entities.CharacterEntity;
+import com.alkemy.disney.disney.exceptions.DuplicateExc;
 
 import java.util.List;
 
 public interface CharacterService {
 
-    CharacterDTO save(CharacterDTO dto, Long titleId);
+    //CharacterDTO save(CharacterDTO dto, Long titleId);
 
-    CharacterDTO saveWithoutMovies(CharacterDTO dto);
+    CharacterDTO saveInRepo(CharacterDTO dto) throws DuplicateExc;
 
     CharacterEntity getCharacterById(Long id);
 

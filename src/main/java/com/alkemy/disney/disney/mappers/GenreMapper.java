@@ -41,7 +41,7 @@ public class GenreMapper {
         return dtos;
     }
 
-    // Converts a Genre DTO List to a Entity List
+    // Converts a Genre DTO List to an Entity List
     public List<GenreEntity> genreDTOList2EntityList(List<GenreDTO>dtos)
     {
         List<GenreEntity>entities = new ArrayList<>();

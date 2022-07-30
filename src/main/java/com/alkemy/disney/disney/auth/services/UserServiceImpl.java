@@ -66,9 +66,8 @@ public class UserServiceImpl implements UserService{
     public AuthResponseDTO login(AuthRequestDTO dto) {
         UserDetails userDetails;
 
-        Authentication auth = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
-                dto.getUsername(),
-                dto.getPassword()));
+        Authentication auth = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(dto.getUsername(), dto.getPassword()));
 
         userDetails = (UserDetails) auth.getPrincipal();
 

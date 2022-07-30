@@ -9,8 +9,8 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.persistence.*;
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -38,7 +38,7 @@ public class TitleEntity {
             name = "characters_in_this_title",
             joinColumns = @JoinColumn(name = "title_id"),
             inverseJoinColumns = @JoinColumn(name = "character_id"))
-    private Set<CharacterEntity> characters = new HashSet<>();
+    private List<CharacterEntity> characters = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinColumn(name = "genre_id", insertable = false, updatable = false)

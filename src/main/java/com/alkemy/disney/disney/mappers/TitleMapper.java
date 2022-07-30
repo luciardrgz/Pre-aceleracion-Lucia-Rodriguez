@@ -6,11 +6,12 @@ import com.alkemy.disney.disney.entities.CharacterEntity;
 import com.alkemy.disney.disney.entities.TitleEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
+
 
 @Component
 public class TitleMapper {
@@ -18,6 +19,7 @@ public class TitleMapper {
     @Lazy
     @Autowired
     private CharacterMapper characterMapper;
+
 
     // Converts a Title DTO to Entity
     public TitleEntity titleDTO2Entity(TitleDTO dto){
@@ -28,7 +30,7 @@ public class TitleMapper {
         entity.setScore(dto.getScore());
         entity.setGenreId(dto.getGenreId());
 
-            Set<CharacterEntity> characterEntities = this.characterMapper.characterDTOList2EntitySet(dto.getCharacters());
+            List<CharacterEntity> characterEntities = this.characterMapper.characterDTOList2EntityList(dto.getCharacters());
             entity.setCharacters(characterEntities);
 
         return entity;
@@ -46,7 +48,7 @@ public class TitleMapper {
 
         if(loadCharacters)
         {
-            List<CharacterDTO> characterDTOS = this.characterMapper.characterEntitySet2DTOList(entity.getCharacters(),false);
+            List<CharacterDTO> characterDTOS = this.characterMapper.characterEntityList2DTOList(entity.getCharacters(),false);
             dto.setCharacters(characterDTOS);
         }
 

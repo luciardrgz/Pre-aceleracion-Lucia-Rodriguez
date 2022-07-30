@@ -1,6 +1,7 @@
 package com.alkemy.disney.disney.controllers;
 
 import com.alkemy.disney.disney.dto.character.CharacterDTO;
+import com.alkemy.disney.disney.exceptions.DuplicateExc;
 import com.alkemy.disney.disney.services.CharacterService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -18,16 +19,14 @@ public class CharacterController {
     @Autowired
     private CharacterService characterService;
 
-    @PostMapping ("/{id}")// Saves a created Character with an associated Title
-    public ResponseEntity<CharacterDTO> save(@RequestBody CharacterDTO characterDTO, Long titleId) {
-        CharacterDTO savedCharacter = characterService.save(characterDTO, titleId);
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedCharacter);
-    }
-
-    @PostMapping ("/alone")// Invokes the Character Service to save a created Character with no movie associated
-    public ResponseEntity<CharacterDTO> saveAlone(@RequestBody CharacterDTO characterDTO) {
-        CharacterDTO savedCharacter = characterService.saveWithoutMovies(characterDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedCharacter);
+    @PostMapping("/save")// Saves a created Character with no movie associated
+    public ResponseEntity<CharacterDTO> save(@RequestBody CharacterDTO characterDTO) throws DuplicateExc {
+        try {
+            CharacterDTO savedCharacter = characterService.saveInRepo(characterDTO);
+            return ResponseEntity.status(HttpStatus.CREATED).body(savedCharacter);
+        } catch (DuplicateExc e) {
+            throw new DuplicateExc("This character already exists in database - check for soft deletes");
+        }
     }
 
     @GetMapping("/id") // Retrieves a Character by its saved id in Repository
@@ -36,7 +35,7 @@ public class CharacterController {
         return ResponseEntity.ok().body(character);
     }
 
-    @GetMapping // Filtered search of Titles by Name, genreId, ASC|DESC order
+    @GetMapping // Filtered search of Chars by Name, Age, Weight, Associated titles - without filters, all Chars are displayed
     public ResponseEntity<List<CharacterDTO>> search(@RequestParam(required = false) String name,
                                                      @RequestParam(required = false) Integer age,
                                                      @RequestParam(required = false) Integer weight,

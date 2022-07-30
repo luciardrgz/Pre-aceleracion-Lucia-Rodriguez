@@ -3,6 +3,7 @@ package com.alkemy.disney.disney.services.impl;
 import com.alkemy.disney.disney.dto.character.CharacterDTO;
 import com.alkemy.disney.disney.entities.CharacterEntity;
 import com.alkemy.disney.disney.dto.character.CharacterFiltersDTO;
+import com.alkemy.disney.disney.exceptions.DuplicateExc;
 import com.alkemy.disney.disney.exceptions.ParamNotFoundExc;
 import com.alkemy.disney.disney.mappers.CharacterMapper;
 import com.alkemy.disney.disney.repositories.CharacterRepository;
@@ -11,10 +12,14 @@ import com.alkemy.disney.disney.services.TitleService;
 import com.alkemy.disney.disney.repositories.specifications.CharacterSpecification;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+
+import static org.springframework.data.domain.ExampleMatcher.GenericPropertyMatchers.ignoreCase;
 
 @Service
 public class CharacterServiceImpl implements CharacterService {
@@ -37,23 +42,26 @@ public class CharacterServiceImpl implements CharacterService {
         this.characterSpecification = characterSpecification;
     }
 
+    // Saves a Character
+    public CharacterDTO saveInRepo(CharacterDTO dto) throws DuplicateExc{
 
-    // Saves a Character with an associated Title in Repository
-    public CharacterDTO save(CharacterDTO dto, Long titleId) {
+        CharacterEntity savedEntity = null;
 
-        CharacterEntity entity = this.characterMapper.characterDTO2Entity(dto);
-        CharacterEntity savedEntity = this.characterRepository.save(entity);
-        titleService.addCharacterToTitle(titleId, savedEntity.getId());
-        CharacterDTO result = this.characterMapper.characterEntity2DTO(savedEntity,true);
-
-        return result;
-    }
-
-    // Saves a Character with no movies associated in Repository
-    public CharacterDTO saveWithoutMovies(CharacterDTO dto) {
+        ExampleMatcher nameMatcher = ExampleMatcher.matching().withIgnorePaths("id")
+                .withMatcher("name", ignoreCase());
 
         CharacterEntity entity = this.characterMapper.characterDTO2Entity(dto);
-        CharacterEntity savedEntity = this.characterRepository.save(entity);
+        Example<CharacterEntity> ex = Example.of(entity, nameMatcher);
+        boolean exists = characterRepository.exists(ex);
+
+        if(exists == false)
+        {
+            savedEntity = this.characterRepository.save(entity);
+        }
+        else {
+            throw new DuplicateExc("Duplicate");
+        }
+
         CharacterDTO result = this.characterMapper.characterEntity2DTO(savedEntity,false);
 
         return result;
@@ -84,7 +92,7 @@ public class CharacterServiceImpl implements CharacterService {
     {
         CharacterFiltersDTO filtersDTO = new CharacterFiltersDTO(name, age, weight, titles);
         List<CharacterEntity> entities = this.characterRepository.findAll(this.characterSpecification.getByFilters(filtersDTO));
-        List<CharacterDTO> dtos = this.characterMapper.characterEntitySet2DTOList(entities,true);
+        List<CharacterDTO> dtos = this.characterMapper.characterEntityList2DTOList(entities,true);
         return dtos;
     }
 
@@ -94,7 +102,7 @@ public class CharacterServiceImpl implements CharacterService {
         Optional<CharacterEntity>entity = characterRepository.findById(id);
         if(!entity.isPresent())
         {
-            throw new ParamNotFoundExc("Character ID to modify not found");
+            throw new ParamNotFoundExc("Character to modify not found");
         }
         this.characterMapper.modifyCharacterValues(entity.get(),characterDTO);
         CharacterEntity savedEntity = this.characterRepository.save(entity.get());
@@ -107,7 +115,7 @@ public class CharacterServiceImpl implements CharacterService {
     public List<CharacterDTO> getCharacters()
     {
         List<CharacterEntity> entities = characterRepository.findAll();
-        List<CharacterDTO>result = characterMapper.characterEntitySet2DTOList(entities,true);
+        List<CharacterDTO>result = characterMapper.characterEntityList2DTOList(entities,true);
         return result;
     }
 

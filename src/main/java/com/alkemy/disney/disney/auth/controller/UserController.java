@@ -4,7 +4,7 @@ import com.alkemy.disney.disney.auth.dto.AuthRequestDTO;
 import com.alkemy.disney.disney.auth.dto.AuthResponseDTO;
 import com.alkemy.disney.disney.auth.dto.UserDTO;
 import com.alkemy.disney.disney.auth.services.UserServiceImpl;
-import com.alkemy.disney.disney.exceptions.NonExistentUserExc;
+import com.alkemy.disney.disney.exceptions.NonExistentEmailOrPassExc;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +19,7 @@ import javax.validation.Valid;
 
 @RestController
 @RequestMapping("auth")
-public class AuthController {
+public class UserController {
 
     @Autowired
     private UserServiceImpl userService;
@@ -28,18 +28,17 @@ public class AuthController {
     public ResponseEntity<UserDTO> register(@Valid @RequestBody UserDTO dto) {
         try {
             return new ResponseEntity<>(userService.registerUser(dto), HttpStatus.CREATED);
-        } catch(Exception e) {
+        } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
     }
 
     @PostMapping("/login") // Invokes the User Service to login / sign in a registered User
-    public ResponseEntity<AuthResponseDTO> login(@Valid @RequestBody AuthRequestDTO dto) throws NonExistentUserExc {
+    public ResponseEntity<AuthResponseDTO> login(@Valid @RequestBody AuthRequestDTO dto) throws NonExistentEmailOrPassExc {
         try {
             return new ResponseEntity<>(userService.login(dto), HttpStatus.OK);
         } catch(Exception e) {
-            // TODO: Manage thrown exception when password is wrong
-            throw new NonExistentUserExc("That email isn't registered");
+            throw new NonExistentEmailOrPassExc("That email is not registered / Wrong password");
         }
     }
 
@@ -47,10 +46,10 @@ public class AuthController {
     public ResponseEntity<AuthResponseDTO> refreshToken(HttpServletRequest request) {
         try {
             return new ResponseEntity<>(userService.refreshToken(request), HttpStatus.OK);
-        } catch(Exception e) {
+        } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
     }
-
-
 }
+
+

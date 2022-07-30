@@ -2,7 +2,6 @@ package com.alkemy.disney.disney.auth.config;
 
 import com.alkemy.disney.disney.auth.filter.JwtRequestFilter;
 import com.alkemy.disney.disney.auth.services.CustomUserDetailsService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,19 +16,32 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
-@RequiredArgsConstructor
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Autowired
     private CustomUserDetailsService customUserDetailsService;
 
-    private String[] paths = {"/auth/login", "/auth/register", "/auth/refresh"};
+    @Bean
+    public JwtRequestFilter JwtRequestFilter(){
+        return new JwtRequestFilter();
+    }
+
+    private String[] WHITE_LIST = {"/auth/login", "/auth/register", "/auth/refresh",
+            "/auth/*", "/v2/api-docs",
+            "/configuration/ui",
+            "/swagger-resources/**",
+            "/swagger-ui.html",
+            "/webjars/**",
+            "/swagger-ui/**",
+            "/v2/**"
+    };
 
     // Password Encoding
     @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Override
+    @Autowired
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth.userDetailsService(customUserDetailsService).passwordEncoder(passwordEncoder);
     }
@@ -37,10 +49,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     // Security Configurations
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http.csrf().disable().cors();
-        http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-        http.authorizeRequests().antMatchers(paths).permitAll();
-        http.authorizeRequests().anyRequest().authenticated();
+        http.csrf().disable()
+                .authorizeRequests().antMatchers(WHITE_LIST).permitAll()
+                .anyRequest().authenticated()
+                .and().exceptionHandling()
+                .and().sessionManagement()
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
         http.addFilterBefore(new JwtRequestFilter(authenticationManagerBean()), UsernamePasswordAuthenticationFilter.class);
     }
 
@@ -49,4 +63,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     public AuthenticationManager authenticationManagerBean() throws Exception {
         return super.authenticationManagerBean();
     }
+
+
 }

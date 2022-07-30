@@ -1,6 +1,7 @@
 package com.alkemy.disney.disney.controllers;
 
 import com.alkemy.disney.disney.dto.title.TitleDTO;
+import com.alkemy.disney.disney.exceptions.DuplicateExc;
 import com.alkemy.disney.disney.services.TitleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -19,9 +20,14 @@ public class TitleController {
     private TitleService titleService;
 
     @PostMapping // Saves a created Title
-    public ResponseEntity<TitleDTO> save(@RequestBody TitleDTO title){
-        TitleDTO savedTitle = titleService.save(title);
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedTitle);
+    public ResponseEntity<TitleDTO> save(@RequestBody TitleDTO title) throws DuplicateExc{
+        try{
+            TitleDTO savedTitle = titleService.saveInRepo(title);
+            return ResponseEntity.status(HttpStatus.CREATED).body(savedTitle);
+        }
+        catch (DuplicateExc e){
+            throw new DuplicateExc("This movie already exists in database - check for soft deletes");
+        }
     }
 
     @GetMapping("/{id}") // Retrieves a Title by its saved id in Repository
@@ -31,7 +37,7 @@ public class TitleController {
         return ResponseEntity.ok(title);
     }
 
-    @GetMapping // Filtered search of Titles by Name, genreId, ASC|DESC order
+    @GetMapping // Filtered search of Titles by Name, genreId, ASC|DESC order - without filters, all Titles are displayed
     public ResponseEntity<List<TitleDTO>>search(@RequestParam(required = false) String name,
                                           @RequestParam(required = false) Long genreId,
                                           @RequestParam(required = false, defaultValue = "ASC") String order)
@@ -53,9 +59,14 @@ public class TitleController {
     }
 
     @PostMapping("/{titleId}/character/{characterId}") // Adds an already created Character into a Title
-    public ResponseEntity<TitleDTO>addCharacterToTitle(@PathVariable Long titleId, @PathVariable Long characterId) {
-        titleService.addCharacterToTitle(titleId, characterId);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+    public ResponseEntity<TitleDTO>addCharacterToTitle(@PathVariable Long titleId, @PathVariable Long characterId) throws DuplicateExc {
+        try{
+            titleService.addCharacterToTitle(titleId, characterId);
+            return ResponseEntity.status(HttpStatus.CREATED).build();
+        }
+        catch (DuplicateExc e){
+            throw new DuplicateExc("That character is already saved in this title");
+        }
     }
 
     @DeleteMapping("/{titleId}/character/{characterId}") // Removes a Character from a Title

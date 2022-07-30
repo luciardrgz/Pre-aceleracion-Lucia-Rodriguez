@@ -47,7 +47,7 @@ public class CharacterMapper {
     }
 
     // Converts a Character Entity List to a DTO List
-    public List<CharacterDTO> characterEntitySet2DTOList(Collection<CharacterEntity> entities, boolean loadTitles)
+    public List<CharacterDTO> characterEntityList2DTOList(Collection<CharacterEntity> entities, boolean loadTitles)
     {
         List<CharacterDTO> dtos = new ArrayList<>();
 
@@ -62,20 +62,7 @@ public class CharacterMapper {
     // Converts a Character DTO List to an Entity List
     public List<CharacterEntity> characterDTOList2EntityList(List<CharacterDTO>dtos)
     {
-        List<CharacterEntity>entities = new ArrayList<>();
-
-        for(CharacterDTO dto : dtos)
-        {
-            entities.add(this.characterDTO2Entity(dto));
-        }
-
-        return entities;
-    }
-
-    // Converts a Character DTO List to an Entity Set
-    public Set<CharacterEntity> characterDTOList2EntitySet(List<CharacterDTO>dtos)
-    {
-        Set<CharacterEntity> entities = new HashSet<>();
+        List<CharacterEntity> entities = new ArrayList<>();
 
         for(CharacterDTO dto : dtos)
         {
